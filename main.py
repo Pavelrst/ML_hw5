@@ -16,12 +16,12 @@ def main():
     assert set(id_val).intersection(set(id_test)) == set()
     assert set(id_test).intersection(set(id_train)) == set()
 
-    #model = Keras_MLP()
-    #model.fit(x_train,y_train)
+    model = Keras_MLP(drop_p=0.1)
+    model.fit(x_train,y_train,graphic=True)
 
     # Cross validation
-    cv = crossValidator(train_x=x_train, train_y=y_train, num_of_folds=4)
-    cv.tune_dropout()
+    #cv = crossValidator(train_x=x_train, train_y=y_train, num_of_folds=4)
+    #cv.tune_dropout()
 
 
 if __name__ == "__main__":

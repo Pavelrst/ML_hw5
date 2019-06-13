@@ -5,6 +5,7 @@ from keras.layers import LeakyReLU
 from keras.layers import Dropout
 from keras.callbacks import LearningRateScheduler
 import keras.optimizers
+import matplotlib.pyplot as plt
 
 class Keras_MLP():
     def __init__(self, n_hidden_list=[150,100,50],num_features=9, lrelu_alpha=0.1, drop_p=0.2):
@@ -25,15 +26,26 @@ class Keras_MLP():
 
         self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
-        self.scheduler = Scheduler(lr=0.01, epochs_list=[10,20,30], decay=0.1)
+        self.scheduler = Scheduler()
 
-    def fit(self, x_train, y_train):
+
+    def fit(self, x_train, y_train, graphic=False):
         # set early stopping monitor so the model stops training when it won't improve anymore
-        early_stopping_monitor = EarlyStopping(patience=3)
+        early_stopping_monitor = EarlyStopping(patience=5)
 
         lrate = LearningRateScheduler(Scheduler().schedule, verbose=1)
         # train model
-        self.model.fit(x_train, y_train, validation_split=0.2, epochs=5, callbacks=[early_stopping_monitor, lrate])
+        hist = self.model.fit(x_train, y_train, validation_split=0.2, epochs=1000, callbacks=[early_stopping_monitor, lrate])
+        if graphic:
+            for key in hist.history:
+                data = hist.history[key]
+                epochs = range(len(hist.history[key]))
+                target = [0.95]*len(hist.history[key])
+                plt.plot(epochs, data, label=key)
+            plt.plot(epochs,target, label='target = 0.95')
+            plt.legend()
+            plt.xlabel('epochs')
+            plt.show()
 
     def predict(self, x_test):
         return self.model.predict(x_test)
