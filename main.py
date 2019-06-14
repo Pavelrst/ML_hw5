@@ -16,13 +16,16 @@ def main():
     assert set(id_val).intersection(set(id_test)) == set()
     assert set(id_test).intersection(set(id_train)) == set()
 
-    model = Keras_MLP(drop_p=0.1)
-    model.fit(x_train,y_train,graphic=True)
+    #model = Keras_MLP(drop_p=0.1)
+    #model.fit(x_train,y_train,graphic=True)
 
     # Cross validation
-    #cv = crossValidator(train_x=x_train, train_y=y_train, num_of_folds=4)
+    cv = crossValidator(train_x=x_train, train_y=y_train,
+                        num_of_folds=4, max_epochs=500)
     #cv.tune_dropout()
-
+    #cv.tune_leaky_slope()
+    #cv.tune_hidden_layers()
+    cv.rand_tune(iter=1000)
 
 if __name__ == "__main__":
     main()

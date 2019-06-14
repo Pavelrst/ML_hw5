@@ -7,29 +7,49 @@ from transform_util import *
 import re
 pd.options.mode.chained_assignment = None
 
-TARGET_FEATURES = ['Avg_environmental_importance', 'Avg_government_satisfaction',
-                   'Avg_education_importance', 'Most_Important_Issue', 'Number_of_valued_Kneset_members',
-                   'Avg_monthly_expense_on_pets_or_plants', 'Avg_Residancy_Altitude',
-                   'Yearly_ExpensesK', 'Weighted_education_rank', 'Vote']
-NUMERIC_TARGET_FEATURES = ['Avg_environmental_importance', 'Avg_government_satisfaction',
-                           'Avg_education_importance', 'Avg_monthly_expense_on_pets_or_plants',
-                           'Avg_Residancy_Altitude', 'Number_of_valued_Kneset_members',
-                           'Yearly_ExpensesK', 'Weighted_education_rank']
+TARGET_FEATURES = ['Avg_environmental_importance',
+                   'Avg_government_satisfaction',
+                   'Avg_education_importance',
+                   'Most_Important_Issue',
+                   'Number_of_valued_Kneset_members',
+                   'Avg_monthly_expense_on_pets_or_plants',
+                   'Avg_Residancy_Altitude',
+                   'Yearly_ExpensesK',
+                   'Weighted_education_rank',
+                   'Vote']
+NUMERIC_TARGET_FEATURES = ['Avg_environmental_importance',
+                           'Avg_government_satisfaction',
+                           'Avg_education_importance',
+                           'Avg_monthly_expense_on_pets_or_plants',
+                           'Avg_Residancy_Altitude',
+                           'Number_of_valued_Kneset_members',
+                           'Yearly_ExpensesK',
+                           'Weighted_education_rank']
 CATEGORIC_TARGET_FEATURES = ['Most_Important_Issue']
+
 CORRELATED_NUMERIC_FEATURES = ['Avg_Satisfaction_with_previous_vote',
-                               'Avg_monthly_expense_when_under_age_21', 'Avg_monthly_household_cost',
-                               'Avg_size_per_room', 'Phone_minutes_10_years']
+                               'Avg_monthly_expense_when_under_age_21',
+                               'Avg_monthly_household_cost',
+                               'Avg_size_per_room',
+                               'Phone_minutes_10_years']
+
 NUMERIC_USEFUL_FEATURES = NUMERIC_TARGET_FEATURES + CORRELATED_NUMERIC_FEATURES
 
-GAUSSIAN_TARGET_FEATURES = ['Avg_Residancy_Altitude', 'Avg_education_importance',
-                            'Avg_environmental_importance', 'Avg_government_satisfaction',
+GAUSSIAN_TARGET_FEATURES = ['Avg_Residancy_Altitude',
+                            'Avg_education_importance',
+                            'Avg_environmental_importance',
+                            'Avg_government_satisfaction',
                             'Number_of_valued_Kneset_members']
-GAUSSIAN_CORRELATED_FEATURES = ['Avg_Satisfaction_with_previous_vote', 'Avg_monthly_household_cost',
-                               'Avg_size_per_room']
-ALL_GAUSSIAN_FEATURES = GAUSSIAN_TARGET_FEATURES + GAUSSIAN_CORRELATED_FEATURES
-NON_GAUSSIAN_TARGET_FEATURES = ['Avg_monthly_expense_on_pets_or_plants', 'Weighted_education_rank',
-                                'Yearly_ExpensesK']
 
+GAUSSIAN_CORRELATED_FEATURES = ['Avg_Satisfaction_with_previous_vote',
+                                'Avg_monthly_household_cost',
+                               'Avg_size_per_room']
+
+ALL_GAUSSIAN_FEATURES = GAUSSIAN_TARGET_FEATURES + GAUSSIAN_CORRELATED_FEATURES
+
+NON_GAUSSIAN_TARGET_FEATURES = ['Avg_monthly_expense_on_pets_or_plants',
+                                'Weighted_education_rank',
+                                'Yearly_ExpensesK']
 
 def main():
     train_set, val_set, test_set = load_and_split('ElectionsData.csv', '.')
@@ -40,8 +60,8 @@ def main():
     train_set, val_set, test_set = data_transformation(train_set, val_set, test_set, False)
     assert sum([s.isna().sum().sum() for s in (train_set, val_set, test_set)]) == 0
 
-    save_datasets(train_set, val_set, test_set)
-    export_features_to_csv(list(train_set))
+    #save_datasets(train_set, val_set, test_set)
+    #export_features_to_csv(list(train_set))
 
     print("main finished")
 
