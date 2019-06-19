@@ -107,14 +107,14 @@ class Keras_MLP():
         early_stopping_monitor = EarlyStopping(patience=self.opt_patience)
 
         if self.scheduling:
-            lrate = LearningRateScheduler(Scheduler().schedule, verbose=1)
+            lrate = LearningRateScheduler(Scheduler().schedule, verbose=0)
             # train model
             hist = self.model.fit(x_train, y_train, validation_split=self.val_split,
-                              epochs=self.max_epochs, callbacks=[early_stopping_monitor, lrate])
+                              epochs=self.max_epochs, callbacks=[early_stopping_monitor, lrate], verbose=0)
         else:
             # train model
             hist = self.model.fit(x_train, y_train, validation_split=self.val_split,
-                                  epochs=self.max_epochs, callbacks=[early_stopping_monitor])
+                                  epochs=self.max_epochs, callbacks=[early_stopping_monitor], verbose=0)
 
         if graphic:
             for key in hist.history:
