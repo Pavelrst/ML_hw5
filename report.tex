@@ -81,17 +81,14 @@
 
 %\newpage
 \section{Process and significant decisions}
-\subsection{Using one model}
-In Homework 3, during the automatic model selection, we found that the best model for the prediction tasks is a Multi-layer perceptron. In this homework we decided to use MLP model as well, according our findings. The main problem with sklearn MLP model was a high level of abstraction which prevented from us to use more advanced techniques. Thus, in this homework we will use Keras framework to build a deep learning model.   
+\subsection{Using one model and ensemble technique}
+In Homework 3, during the automatic model selection, we found that the best model for the prediction tasks is a Multi-layer perceptron. In this homework we decided to use MLP model as well, according our findings. The main problem with sklearn MLP model was a high level of abstraction which prevented from us to use more advanced techniques. Thus, in this homework we will use Keras framework to build a deep learning model. To boost our model accuracy we decided to use ensemble technique. We will train multiple MLP models, then use all of them to predict the labels. 
 
 \subsection{Minimal data pre-processing}
 TODO
 
-\subsection{Hyper parameters tuning with k-fold cross validation}
-In order to select the best model, we need to perform k-fold cross validation using training set only. The cross validation process is implemented in cross Validator class. In all our cross-validation experiments we used the $accuracy$ and $f1_score$ as model performance measurement.
-
 \subsection{Hyper parameters tuning with random search}
-Based on Stanford CS231n course, lectures 6,7, we decided to use another technique for tuning the MLP parameters using random search, as this "brute force" technique might achieve better results than tuning parameters one by one.
+Based on Stanford CS231n course, lectures 6,7, we decided to use another technique for tuning the MLP parameters using random search, as this "brute force" technique might achieve better results than tuning parameters one by one. In all our cross-validation experiments we used the $accuracy$ and $f1_score$ as model performance measurement. Models which achieve more than 0.93 on both metrics will be saved and used as a part of ensemble.
 
 \begin{figure}[h]
 \centering
@@ -99,11 +96,15 @@ Based on Stanford CS231n course, lectures 6,7, we decided to use another techniq
 \caption{Random search of hyper-parameters}
 \end{figure}
 
-
-\section{MLP hyper-parameters tuning}
+\section{MLP hyper-parameters tuning by random search}
 \subsection{Dropout probability}
-\subsection{Leaky ReLU slope}
-\subsection{Number of hidden layers}
+Dropout is a regularization technique for reducing overfitting in neural networks by preventing complex co-adaptations on training data. The term "dropout" refers to dropping out units in a neural network. During the Random search we will draw a random number from 0.01 to 0.6 and this will be the dropout probability in a current model. 
+\subsection{Activation functions}
+We will draw randomly the activation functions for each model. The options are ReLU, Leaky ReLU and tanh, while for Leaky ReLU we also draw a slope of the negative part of the function from 0.01 to 0.5.
+\subsection{Number of hidden layers and their sizes}
+For current data-set, deep neural networks tend to over-fit, thus we will draw a random number of hidden layers from 0 to 5, and for each layer a number of neurons from 5 to 200 (based on our finding in HW3).
+\subsection{Batch Normalization}
+For each model we will decide randomly either to use or not batch normalization between the layers. 
 
 
 
