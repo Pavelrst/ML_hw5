@@ -202,3 +202,9 @@ From this point we will try to train on datasets from hw2
 {'avg_acc': 0.9352857142857143, 'avg_f1': 0.9330863882352831, 'layers': [78, 177], 'drop_p': 0.3, 'relu_slope': 0.21, 'activation': 'relu', 'scheduling': True, 'b_norm': True}
 
 Here we get back to processed dataset with 9 features.
+{'avg_acc': 0.9041666666666667, 'avg_f1': 0.9008315037530364, 'layers': [74, 46, 153], 'drop_p': 0.24, 'relu_slope': 0.28, 'activation': 'lrelu', 'scheduling': False, 'b_norm': True}
+{'avg_acc': 0.921, 'avg_f1': 0.919531331264114, 'layers': [101], 'drop_p': 0.36, 'relu_slope': 0.01, 'activation': 'lrelu', 'scheduling': True, 'b_norm': False}
+{'avg_acc': 0.9066666666666667, 'avg_f1': 0.903673061671533, 'layers': [167, 38], 'drop_p': 0.38, 'relu_slope': 0.26, 'activation': 'relu', 'scheduling': True, 'b_norm': True}
+{'avg_acc': 0.9116666666666666, 'avg_f1': 0.9107087405115254, 'layers': [88, 30, 128, 181], 'drop_p': 0.3, 'relu_slope': 0.41, 'activation': 'tanh', 'scheduling': True, 'b_norm': False}
+{'avg_acc': 0.9031666666666667, 'avg_f1': 0.8995231821778406, 'layers': [146, 200], 'drop_p': 0.57, 'relu_slope': 0.42, 'activation': 'relu', 'scheduling': False, 'b_norm': True}
+{'avg_acc': 0.8936666666666667, 'avg_f1': 0.8901726408919856, 'layers': [199, 29], 'drop_p': 0.41, 'relu_slope': 0.03, 'activation': 'tanh', 'scheduling': True, 'b_norm': True}
