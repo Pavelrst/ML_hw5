@@ -4,6 +4,7 @@ from cross_validation import crossValidator
 import numpy as np
 
 from model import Keras_MLP
+from model import MLP_ensemble
 
 def main():
     dp = dataProvider()
@@ -20,12 +21,16 @@ def main():
     #model.fit(x_train,y_train,graphic=True)
 
     # Cross validation
-    cv = crossValidator(train_x=x_train, train_y=y_train,
-                        num_of_folds=4, max_epochs=500)
+    #cv = crossValidator(train_x=x_train, train_y=y_train,
+    #                    num_of_folds=4, max_epochs=500)
     #cv.tune_dropout()
     #cv.tune_leaky_slope()
     #cv.tune_hidden_layers()
-    cv.rand_tune(iter=1000)
+    #cv.rand_tune(iter=1000)
+
+    ensamble = MLP_ensemble('saved_models')
+    ensamble.score(x_test, y_test)
+
 
 if __name__ == "__main__":
     main()

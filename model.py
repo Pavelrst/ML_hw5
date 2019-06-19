@@ -7,6 +7,43 @@ from keras.callbacks import LearningRateScheduler
 from keras.layers.normalization import BatchNormalization
 import keras.optimizers
 import matplotlib.pyplot as plt
+from keras.models import load_model
+import numpy as np
+from collections import Counter
+from sklearn.metrics import accuracy_score
+import os
+
+class MLP_ensemble():
+    def __init__(self, path):
+        self.models = []
+
+        for filename in os.listdir(path):
+            model = load_model(path + '\\' + filename)
+            self.models.append(model)
+
+    def score(self, x_test, y_test):
+        y_test = np.argmax(y_test, axis=1)
+        y_pred = self.predict(x_test)
+        acc = accuracy_score(y_test, y_pred)
+        print(acc)
+
+    def predict(self, x_test):
+        num_samples = x_test.shape[0]
+        pred = np.zeros((len(self.models), num_samples))
+
+        for idx, model in enumerate(self.models):
+            pred[idx:] = np.argmax(model.predict(x_test), axis=1)
+
+        final_pred = []
+        for idx in range(num_samples):
+            ens_pred = pred[:,idx]
+            final_pred.append(Counter(ens_pred).most_common(1)[0][0])
+        return np.array(final_pred)
+
+
+
+
+
 
 class Keras_MLP():
     def __init__(self, n_hidden_list, num_features=9, lrelu_alpha=0.1,
@@ -62,6 +99,8 @@ class Keras_MLP():
         if self.scheduling:
             self.scheduler = Scheduler()
 
+    def save(self, path):
+        self.model.save(path)
 
     def fit(self, x_train, y_train, graphic=False):
         # set early stopping monitor so the model stops training when it won't improve anymore
