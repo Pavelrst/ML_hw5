@@ -8,6 +8,9 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 
 PLOTS_PATH = 'Cross_valid_plots'
+ACC_THRESHOLD = 0.93
+F1_THRESHOLD = 0.93
+MODELS_PATH = 'saved_models'
 
 class crossValidator():
     '''
@@ -37,7 +40,7 @@ class crossValidator():
             h_list = []
 
             for i in range(random.randint(1, 4)):
-                h_list.append(random.randint(20, 200))
+                h_list.append(random.randint(5, 200))
 
             rand = random.randint(0, 2)
             if rand == 0:
@@ -60,7 +63,7 @@ class crossValidator():
                 b_norm = True
 
             mlp1 = Keras_MLP(n_hidden_list=h_list,
-                             num_features=14,
+                             num_features=9,
                              lrelu_alpha=a,
                              drop_p=p,
                              max_epochs=self.max_epochs,
@@ -79,16 +82,25 @@ class crossValidator():
                 avg_acc += acc
                 avg_f1 += f1
 
-            res = {'avg_acc': avg_acc / self.k, 'avg_f1': avg_f1 / self.k,
+            avg_acc = avg_acc / self.k
+            avg_f1 = avg_f1 / self.k
+
+            res = {'avg_acc': avg_acc, 'avg_f1': avg_f1,
                              'layers': h_list, 'drop_p': p, 'relu_slope': a,
                    'activation': act, 'scheduling': scheduling, 'b_norm': b_norm}
-
+            print(res)
             res_list.append(res)
             with open('random_models.txt', 'a') as f:
                 f.write("%s\n" % res)
 
-        for item in res_list:
-            print(item)
+            if avg_acc > ACC_THRESHOLD and avg_f1 > F1_THRESHOLD:
+                mlp1.fit(self.set_x, self.set_y)
+                rand_id = random.randint(1,1000000)
+                path = MODELS_PATH + '\\' + "model_" + str(rand_id) + ".h5"
+                mlp1.save(path)
+
+
+
 
 
 
