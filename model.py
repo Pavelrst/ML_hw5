@@ -12,9 +12,12 @@ import numpy as np
 from collections import Counter
 from sklearn.metrics import accuracy_score
 import os
+import pandas as pd
 
 class MLP_ensemble():
-    def __init__(self, path):
+    def __init__(self, path, parties_dict):
+        self.num_of_classes = 13
+        self.party_dict = parties_dict
         self.models = []
 
         for filename in os.listdir(path):
@@ -40,7 +43,27 @@ class MLP_ensemble():
             final_pred.append(Counter(ens_pred).most_common(1)[0][0])
         return np.array(final_pred)
 
+    def save_votes_to_csv(self, x_test):
+        predictions = self.predict(x_test)
+        pred_pd = pd.DataFrame({'Vote': predictions})
+        pred_pd.to_csv('predicted_labels.csv')
 
+    def predict_winner(self, x_test):
+        predictions = self.predict(x_test)
+        winner = max(set(predictions), key=predictions.tolist().count)
+        #winner_name = self.party_dict[winner]
+        print("Winner prediction - ", winner, " party will win the elections.")
+        return winner
+
+    def predict_vote_division(self, x_test):
+        predictions = self.predict(x_test)
+        pred_hist = [0] * self.num_of_classes
+        for pred in predictions:
+            pred_hist[pred] += 1
+        total = sum(pred_hist)
+        print(" prediction - Vote division:")
+        for idx, num in enumerate(pred_hist):
+            print("Party ", self.party_dict[idx], ":", np.round((num / total) * 100, 1), "%")
 
 
 
