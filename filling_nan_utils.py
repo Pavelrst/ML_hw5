@@ -17,14 +17,14 @@ FEATURES_TO_CLIP = ['Avg_environmental_importance', 'Avg_government_satisfaction
                     'Number_of_valued_Kneset_members']
 
 
-def num_nas(train, val, test, features):
+def num_nas(train, val, test, unlabeled, features):
     '''
     Gets three data sets and returns the total number of nas of all three of them in given
     features list
     '''
     sum_nas = 0
-    for s in train, val, test:
-        for f in features:
+    for s in train, val, test, unlabeled:
+        for f in set(features) - {'Vote'}:
             sum_nas += s[f].isna().sum().sum()
     return sum_nas
 
@@ -48,7 +48,8 @@ def impute_by_lin_model(model, data, X, Y):
     return data
 
 
-def __fill_missing_linear_regression(train, validation, test, features, corr_mat):
+def __fill_missing_linear_regression(train, validation, test, unlabeled, features,
+                                     corr_mat):
     '''
     Fill missing values in all 3 sets by a linear regression to the most correlated other feature,
     in absolute value. Will never fill missing values if the correlation between features is lower
@@ -61,13 +62,14 @@ def __fill_missing_linear_regression(train, validation, test, features, corr_mat
     :return:
     '''
     assert isinstance(train, pd.DataFrame)
-    assert isinstance(test, pd.DataFrame)
     assert isinstance(validation, pd.DataFrame)
+    assert isinstance(test, pd.DataFrame)
+    assert isinstance(unlabeled, pd.DataFrame)
     assert isinstance(features, list)
 
-    sum_nas_before = num_nas(train, validation, test, features)
+    sum_nas_before = num_nas(train, validation, test, unlabeled, features)
 
-    all_sets = [train, validation, test]
+    all_sets = [train, validation, test, unlabeled]
     for feature in features:
         corr_tuples = [(corr_mat[feature][col], col) for col in corr_mat.columns if col != feature]
         corr_tuples.sort(key=lambda x: x[0], reverse=True)
@@ -89,17 +91,17 @@ def __fill_missing_linear_regression(train, validation, test, features, corr_mat
 
             corr_tuples.pop(0)
 
-    [train, validation, test] = all_sets
-    sum_nas_after = num_nas(train, validation, test, features)
+    [train, validation, test, unlabeled] = all_sets
+    sum_nas_after = num_nas(train, validation, test, unlabeled, features)
     assert sum_nas_after <= sum_nas_before
 
     print('we filled', (1-float(sum_nas_after)/sum_nas_before)*100, '% of nas in numerical features',
           'of all three sets')
 
-    return train, validation, test
+    return train, validation, test, unlabeled
 
 
-def fill_missing_vals_by_mean(train, val, test, features):
+def fill_missing_vals_by_mean(train, val, test, unlabeled, features):
     '''
     Fills three data sets' all missing values in given features by the mean value of that feature
     Used as a last resort
@@ -112,6 +114,7 @@ def fill_missing_vals_by_mean(train, val, test, features):
     assert isinstance(train, pd.DataFrame)
     assert isinstance(val, pd.DataFrame)
     assert isinstance(test, pd.DataFrame)
+    assert isinstance(unlabeled, pd.DataFrame)
     assert isinstance(features, (list, set))
 
     for f in features:
@@ -119,14 +122,15 @@ def fill_missing_vals_by_mean(train, val, test, features):
         train_and_val = pd.concat([train, val])
         mean = train_and_val[f].mean()
 
-        for data_set in (train, val, test):
+        for data_set in (train, val, test, unlabeled):
             data_set[f].fillna(mean, inplace=True)
             assert data_set[f].isna().sum() == 0
-    return train, val, test
+    return train, val, test, unlabeled
 
 
-def fill_nans_by_lin_regress(train_set, val_set, test_set, corr_features, target_features,
-                             verbose=True, graphic=False, all_history=False):
+def fill_nans_by_lin_regress(train_set, val_set, test_set, unlabeled_set, corr_features,
+                             target_features, verbose=True, graphic=False,
+                             all_history=False):
     '''
     Fills all numeric missing values in all three sets, first by correlated features then the rest
     are just filled by the median value
@@ -139,15 +143,17 @@ def fill_nans_by_lin_regress(train_set, val_set, test_set, corr_features, target
     assert isinstance(train_set, pd.DataFrame)
     assert isinstance(val_set, pd.DataFrame)
     assert isinstance(test_set, pd.DataFrame)
+    assert isinstance(unlabeled_set, pd.DataFrame)
 
     train_and_val = pd.concat([train_set, val_set])
     corr_matrix = train_and_val[corr_features].corr()
     corr_matrix = abs(corr_matrix)
 
-    train_set, val_set, test_set = \
-        __fill_missing_linear_regression(train_set, val_set, test_set, target_features, corr_matrix)
+    train_set, val_set, test_set, unlabeled_set = \
+        __fill_missing_linear_regression(train_set, val_set, test_set, unlabeled_set,
+                                         target_features, corr_matrix)
 
-    return train_set, val_set, test_set
+    return train_set, val_set, test_set, unlabeled_set
 
 
 def __delete_vals_out_of_range(data_set, feature, min_val=-math.inf, max_val=math.inf):
@@ -166,7 +172,8 @@ def __delete_vals_out_of_range(data_set, feature, min_val=-math.inf, max_val=mat
         print("removed", count, "vals out of range for feature", feature)
 
 
-def delete_vals_out_of_range(train_set, val_set, test_set, features, verbose=True):
+def delete_vals_out_of_range(train_set, val_set, test_set, unlabeled_set, features,
+                             verbose=True):
     '''
     Delete all values in all data sets that are out of range
     Deleted values will be marked as nans
@@ -176,9 +183,10 @@ def delete_vals_out_of_range(train_set, val_set, test_set, features, verbose=Tru
     assert isinstance(train_set, pd.DataFrame)
     assert isinstance(val_set, pd.DataFrame)
     assert isinstance(test_set, pd.DataFrame)
+    assert isinstance(unlabeled_set, pd.DataFrame)
 
     if verbose:
-        start_num_nans = num_nas(train_set, val_set, test_set, features)
+        start_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set, features)
 
     non_negative_features = ['Avg_Residancy_Altitude',
                              'Avg_monthly_expense_on_pets_or_plants',
@@ -189,8 +197,7 @@ def delete_vals_out_of_range(train_set, val_set, test_set, features, verbose=Tru
                              'Phone_minutes_10_years',
                              'Political_interest_Total_Score',
                              'Weighted_education_rank',
-                             'Yearly_ExpensesK'
-                             ]
+                             'Yearly_ExpensesK']
     percentage_features = ['Last_school_grades']
     zero_to_120_scale_features = ['Number_of_valued_Kneset_members']
     zero_to_1000_scale_features = ['Avg_education_importance', 'Avg_environmental_importance',
@@ -207,7 +214,7 @@ def delete_vals_out_of_range(train_set, val_set, test_set, features, verbose=Tru
     for f in features:
         assert f in scaled_features
 
-    for data_set in (train_set, test_set, val_set):
+    for data_set in (train_set, test_set, val_set, unlabeled_set):
         for f in train_set.columns:
             if f in non_negative_features:
                 __delete_vals_out_of_range(data_set, f, min_val=0)
@@ -221,7 +228,8 @@ def delete_vals_out_of_range(train_set, val_set, test_set, features, verbose=Tru
                 __delete_vals_out_of_range(data_set, f, min_val=0, max_val=12000)
 
     if verbose:
-        num_nans_after_clip = num_nas(train_set, val_set, test_set, features)
+        num_nans_after_clip = num_nas(train_set, val_set, test_set, unlabeled_set,
+                                      features)
         num_vals_in_frame = 10000 * len(train_set.columns)
         percentage_dropped_by_clipping = \
             (float(num_nans_after_clip - start_num_nans) * 100) / num_vals_in_frame
@@ -229,16 +237,17 @@ def delete_vals_out_of_range(train_set, val_set, test_set, features, verbose=Tru
               'from all data sets combined')
 
 
-def delete_outliers(train_set, val_set, test_set, features, verbose=True):
+def delete_outliers(train_set, val_set, test_set, unlabeled_set, features, verbose=True):
     '''
     Deletes all values of features that are STD_THRESHOLD number of standard deviations above mean
     '''
     assert isinstance(train_set, pd.DataFrame)
     assert isinstance(val_set, pd.DataFrame)
     assert isinstance(test_set, pd.DataFrame)
+    assert isinstance(unlabeled_set, pd.DataFrame)
 
     if verbose:
-        start_num_nans = num_nas(train_set, val_set, test_set, features)
+        start_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set, features)
 
     train_and_val = pd.concat([train_set, val_set])
 
@@ -248,13 +257,13 @@ def delete_outliers(train_set, val_set, test_set, features, verbose=True):
         std = train_and_val[f].std()
         mean = train_and_val[f].mean()
 
-        for data_set in (train_set, val_set, test_set):
+        for data_set in (train_set, val_set, test_set, unlabeled_set):
             delta = STD_DIFF * std
             for index, row in data_set[~data_set[f].between(mean - delta, mean + delta)].iterrows():
                 data_set.ix[index, f] = np.nan
 
     if verbose:
-        final_num_nans = num_nas(train_set, val_set, test_set, features)
+        final_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set, features)
         percentage_dropped_by_std_dropping = \
             (float(final_num_nans - start_num_nans) * 100) / (10000 * len(train_set.columns))
         print("Outliers dropped:", str(percentage_dropped_by_std_dropping) + '%', 'of all data sets combined')

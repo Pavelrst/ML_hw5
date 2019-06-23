@@ -51,12 +51,17 @@ NON_GAUSSIAN_TARGET_FEATURES = ['Avg_monthly_expense_on_pets_or_plants',
                                 'Weighted_education_rank',
                                 'Yearly_ExpensesK']
 
-def main():
-    train_set, val_set, test_set = load_and_split('ElectionsData.csv', '.')
-    train_set, val_set, test_set = set_clean(train_set, val_set, test_set,
-                                             verbose=True, graphic=True)
+ID_FEATURE = "IdentityCard_Num"
 
-    train_set, val_set, test_set = remove_inconsistency(train_set, val_set, test_set)
+
+def main():
+    train_set, val_set, test_set, unlabeled_set = load_and_split('ElectionsData.csv', '.')
+    train_set, val_set, test_set, unlabeled_set = set_clean(train_set, val_set, test_set,
+                                                            unlabeled_set, verbose=True,
+                                                            graphic=True)
+
+    train_set, val_set, test_set, unlabeled_set = \
+        remove_inconsistency(train_set, val_set, test_set, unlabeled_set)
     train_set, val_set, test_set = data_transformation(train_set, val_set, test_set, False)
     assert sum([s.isna().sum().sum() for s in (train_set, val_set, test_set)]) == 0
 
@@ -95,6 +100,7 @@ def load_and_split(input_path, backup_dir, train=0.6, validation=0.2, test=0.2):
     assert val_size / all_data_length == validation
     assert test_size / all_data_length == test
 
+    # Lots of assertions
     for tag in all_data['Vote'].unique():
         total_tag_num = len(all_data[(all_data.Vote == tag)])
         train_tag_num = len(train_set[(train_set.Vote == tag)])
@@ -107,10 +113,11 @@ def load_and_split(input_path, backup_dir, train=0.6, validation=0.2, test=0.2):
     train_set.to_csv(os.path.join(backup_dir, 'train_backup.csv'))
     val_set.to_csv(os.path.join(backup_dir, 'val_backup.csv'))
     test_set.to_csv(os.path.join(backup_dir, 'test_backup.csv'))
-    return train_set, val_set, test_set
+    unlabeled_set = pd.read_csv('ElectionsData_Pred_Features.csv')
+    return train_set, val_set, test_set, unlabeled_set
 
 
-def set_clean(train_set, val_set, test_set, verbose=True, graphic=False):
+def set_clean(train_set, val_set, test_set, unlabeled_set, verbose=True, graphic=False):
     """
     - Fill missing values
     - Smooth noisy data
@@ -128,24 +135,34 @@ def set_clean(train_set, val_set, test_set, verbose=True, graphic=False):
         all_sets[index] = all_sets[index][init_features]
     [train_set, val_set, test_set] = all_sets
 
-    init_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    unlabeled_features = NUMERIC_USEFUL_FEATURES + CATEGORIC_TARGET_FEATURES + [ID_FEATURE]
+    unlabeled_set = unlabeled_set[unlabeled_features]
 
-    delete_vals_out_of_range(train_set, val_set, test_set, NUMERIC_USEFUL_FEATURES, verbose=True)
-    clipped_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    init_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set, TARGET_FEATURES)
+
+    delete_vals_out_of_range(train_set, val_set, test_set, unlabeled_set,
+                             NUMERIC_USEFUL_FEATURES, verbose=True)
+    clipped_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set,
+                               TARGET_FEATURES)
     assert clipped_num_nans > init_num_nans
 
-    train_set, val_set, test_set = \
-        fill_nans_by_lin_regress(train_set, val_set, test_set, NUMERIC_USEFUL_FEATURES, NUMERIC_TARGET_FEATURES)
-    first_fill_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    train_set, val_set, test_set, unlabeled_set = \
+        fill_nans_by_lin_regress(train_set, val_set, test_set, unlabeled_set,
+                                 NUMERIC_USEFUL_FEATURES, NUMERIC_TARGET_FEATURES)
+    first_fill_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set,
+                                  TARGET_FEATURES)
     assert clipped_num_nans >= first_fill_num_nans
 
-    delete_outliers(train_set, val_set, test_set, ALL_GAUSSIAN_FEATURES)
-    no_outliers_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    delete_outliers(train_set, val_set, test_set, unlabeled_set, ALL_GAUSSIAN_FEATURES)
+    no_outliers_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set,
+                                   TARGET_FEATURES)
     assert no_outliers_num_nans >= first_fill_num_nans
 
-    train_set, val_set, test_set = \
-        fill_nans_by_lin_regress(train_set, val_set, test_set, NUMERIC_USEFUL_FEATURES, NUMERIC_TARGET_FEATURES)
-    sec_lin_reg_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    train_set, val_set, test_set, unlabeled_set = \
+        fill_nans_by_lin_regress(train_set, val_set, test_set, unlabeled_set,
+                                 NUMERIC_USEFUL_FEATURES, NUMERIC_TARGET_FEATURES)
+    sec_lin_reg_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set,
+                                   TARGET_FEATURES)
     assert sec_lin_reg_num_nans <= no_outliers_num_nans
 
     all_sets = [train_set, val_set, test_set]
@@ -153,16 +170,25 @@ def set_clean(train_set, val_set, test_set, verbose=True, graphic=False):
         all_sets[index] = all_sets[index][TARGET_FEATURES]
     [train_set, val_set, test_set] = all_sets
 
-    delete_vals_out_of_range(train_set, val_set, test_set, NUMERIC_TARGET_FEATURES, verbose=True)
-    reclipped_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    unlabeled_features = set(TARGET_FEATURES) - {'Vote'}
+    unlabeled_features.add(ID_FEATURE)
+    unlabeled_set = unlabeled_set[unlabeled_features]
+
+    delete_vals_out_of_range(train_set, val_set, test_set, unlabeled_set,
+                             NUMERIC_TARGET_FEATURES, verbose=True)
+    reclipped_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set,
+                                 TARGET_FEATURES)
     assert reclipped_num_nans >= sec_lin_reg_num_nans
 
-    fill_missing_vals_by_mean(train_set, val_set, test_set, NUMERIC_TARGET_FEATURES)
-    num_features_full_num_nans = num_nas(train_set, val_set, test_set, TARGET_FEATURES)
+    fill_missing_vals_by_mean(train_set, val_set, test_set, unlabeled_set,
+                              NUMERIC_TARGET_FEATURES)
+    num_features_full_num_nans = num_nas(train_set, val_set, test_set, unlabeled_set,
+                                         TARGET_FEATURES)
     assert num_features_full_num_nans <= sec_lin_reg_num_nans
-    assert num_nas(train_set, val_set, test_set, NUMERIC_TARGET_FEATURES) == 0
+    assert num_nas(train_set, val_set, test_set, unlabeled_set, NUMERIC_TARGET_FEATURES) \
+           == 0
 
-    return train_set, val_set, test_set
+    return train_set, val_set, test_set, unlabeled_set
 
 
 def smooth_noisy_data(train_set, val_set, test_set, verbose=True, graphic=False):
@@ -191,18 +217,20 @@ def smooth_noisy_data(train_set, val_set, test_set, verbose=True, graphic=False)
     return train_set, val_set, test_set
 
 
-def remove_inconsistency(train_set, val_set, test_set):
+def remove_inconsistency(train_set, val_set, test_set, unlabeled_Set):
     '''
     Removes columns which have exact same features besides Vote, yet differ on the Vote
     '''
     assert isinstance(train_set, pd.DataFrame)
     assert isinstance(val_set, pd.DataFrame)
     assert isinstance(test_set, pd.DataFrame)
+    assert isinstance(unlabeled_Set, pd.DataFrame)
+
     columns = list(train_set)
     columns.remove('Vote')
-    for data_set in (train_set, val_set, test_set):
+    for data_set in (train_set, val_set, test_set, unlabeled_Set):
         data_set.drop_duplicates(columns)
-    return train_set, val_set, test_set
+    return train_set, val_set, test_set, unlabeled_Set
 
 
 def data_transformation(train_set, val_set, test_set, graphic=False):
