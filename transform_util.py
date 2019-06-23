@@ -25,7 +25,7 @@ def scale_zscore(data_set, feature, mean, std):
     data_set[feature] = (data_set[feature] - mean) / float(std)
 
 
-def scale_sets(train, val, test, gaussian_features, non_gaussian_features):
+def scale_sets(train, val, test, unlabeled, gaussian_features, non_gaussian_features):
     '''
     Scales numeric features of all three sets
     some features are scled by min max, others by z score
@@ -33,22 +33,23 @@ def scale_sets(train, val, test, gaussian_features, non_gaussian_features):
     assert isinstance(train, pd.DataFrame)
     assert isinstance(val, pd.DataFrame)
     assert isinstance(test, pd.DataFrame)
+    assert isinstance(unlabeled, pd.DataFrame)
 
     train_and_val = pd.concat([train, val])
 
     for f in non_gaussian_features:
         f_max = train_and_val[f].max()
         f_min = train_and_val[f].min()
-        for data_set in (train, val, test):
+        for data_set in (train, val, test, unlabeled):
             scale_min_max(data_set, f, f_min, f_max)
 
     for f in gaussian_features:
         f_mean = train_and_val[f].mean()
         f_std = train_and_val[f].std()
-        for data_set in (train, val, test):
+        for data_set in (train, val, test, unlabeled):
             scale_zscore(data_set, f, f_mean, f_std)
 
-    return train, val, test
+    return train, val, test, unlabeled
 
 
 def split_category_to_bits(data_set, cat_feature):
@@ -68,6 +69,7 @@ def ___transform_categoric(data_set):
     '''
     assert isinstance(data_set, pd.DataFrame)
     assert data_set.isna().sum().sum() == 0
+    data_set['Party'] = data_set['Vote'].copy()
     transform_label(data_set, "Vote")
 
 

@@ -62,11 +62,13 @@ def main():
 
     train_set, val_set, test_set, unlabeled_set = \
         remove_inconsistency(train_set, val_set, test_set, unlabeled_set)
-    train_set, val_set, test_set = data_transformation(train_set, val_set, test_set, False)
-    assert sum([s.isna().sum().sum() for s in (train_set, val_set, test_set)]) == 0
+    train_set, val_set, test_set, unlabeled_set = \
+        data_transformation(train_set, val_set, test_set, unlabeled_set, False)
+    assert sum([s.isna().sum().sum() for s in
+                (train_set, val_set, test_set, unlabeled_set)]) == 0
 
-    #save_datasets(train_set, val_set, test_set)
-    #export_features_to_csv(list(train_set))
+    save_datasets(train_set, val_set, test_set, unlabeled_set)
+    # export_features_to_csv(list(train_set))
 
     print("main finished")
 
@@ -233,7 +235,7 @@ def remove_inconsistency(train_set, val_set, test_set, unlabeled_Set):
     return train_set, val_set, test_set, unlabeled_Set
 
 
-def data_transformation(train_set, val_set, test_set, graphic=False):
+def data_transformation(train_set, val_set, test_set, unlabeled_set, graphic=False):
     """
     - Scaling
     - Normalization (Z-score or min-max)
@@ -246,26 +248,29 @@ def data_transformation(train_set, val_set, test_set, graphic=False):
     """
     if graphic:
         show_set_hist(train_set, title='train_set histogram before scaling')
-    train_set, val_set, test_set = scale_sets(train_set, val_set, test_set, GAUSSIAN_TARGET_FEATURES,
-                                              NON_GAUSSIAN_TARGET_FEATURES)
+    train_set, val_set, test_set, unlabeled_set = \
+        scale_sets(train_set, val_set, test_set, unlabeled_set, GAUSSIAN_TARGET_FEATURES,
+                   NON_GAUSSIAN_TARGET_FEATURES)
 
-    train_set, val_set, test_set = \
-        fill_categorical_missing_vals(train_set, val_set, test_set, CATEGORIC_TARGET_FEATURES)
-    assert num_nas(train_set, val_set, test_set, TARGET_FEATURES) == 0
+    train_set, val_set, test_set, unlabeled_set = \
+        fill_categorical_missing_vals(train_set, val_set, test_set, unlabeled_set,
+                                      CATEGORIC_TARGET_FEATURES)
+    assert num_nas(train_set, val_set, test_set, unlabeled_set, TARGET_FEATURES) == 0
 
     if graphic:
         show_set_hist(train_set, title='train_set histogram after scaling')
     transform_categoric(train_set, val_set, test_set)
-    return train_set, val_set, test_set
+    return train_set, val_set, test_set, unlabeled_set
 
 
-def save_datasets(train_set, val_set, test_set):
+def save_datasets(train_set, val_set, test_set, unlabeled_set):
     assert isinstance(train_set, pd.DataFrame)
     assert isinstance(val_set, pd.DataFrame)
     assert isinstance(test_set, pd.DataFrame)
-    train_set.to_csv('train_transformed.csv')
-    val_set.to_csv('validation_transformed.csv')
-    test_set.to_csv('test_transformed.csv')
+    train_set.to_csv('train_transformed.csv', index=False)
+    val_set.to_csv('validation_transformed.csv', index=False)
+    test_set.to_csv('test_transformed.csv', index=False)
+    unlabeled_set.to_csv('unlabeled_set.csv', index=False)
 
 
 def export_features_to_csv(features):

@@ -269,7 +269,7 @@ def delete_outliers(train_set, val_set, test_set, unlabeled_set, features, verbo
         print("Outliers dropped:", str(percentage_dropped_by_std_dropping) + '%', 'of all data sets combined')
 
 
-def fill_categorical_missing_vals(train, val, test, features):
+def fill_categorical_missing_vals(train, val, test, unlabeled, features):
     '''
     Fills categorical features by the same distribution as present in train data
     :param train: training data set
@@ -279,6 +279,7 @@ def fill_categorical_missing_vals(train, val, test, features):
     assert isinstance(train, pd.DataFrame)
     assert isinstance(val, pd.DataFrame)
     assert isinstance(test, pd.DataFrame)
+    assert isinstance(unlabeled, pd.DataFrame)
 
     train_and_val = pd.concat([train, val])
     tree_data = train_and_val[(~train_and_val['Most_Important_Issue'].isnull())]
@@ -292,7 +293,7 @@ def fill_categorical_missing_vals(train, val, test, features):
     clf = neighbors.KNeighborsClassifier(10)
     clf = clf.fit(X, Y)
 
-    all_sets = [train, val, test]
+    all_sets = [train, val, test, unlabeled]
     for i, data_set in enumerate(all_sets):
         no_nan_cat_features = data_set[(~data_set['Most_Important_Issue'].isnull())]
         assert train_and_val[(~train_and_val['Most_Important_Issue'].isnull())].isna().sum().sum() == 0
@@ -301,7 +302,10 @@ def fill_categorical_missing_vals(train, val, test, features):
         transform_label(no_nan_cat_features, 'Most_Important_Issue')
 
         issueless = nan_cat_features.drop(columns='Most_Important_Issue')
-        issueless = issueless.drop(columns='Vote')
+        if 'Vote' in issueless.columns:
+            issueless = issueless.drop(columns='Vote')
+        elif 'IdentityCard_Num' in issueless.columns:
+            issueless = issueless.drop(columns='IdentityCard_Num')
         for index, row in nan_cat_features.iterrows():
             nan_cat_features.ix[index, 'Most_Important_Issue'] = \
                 clf.predict(issueless.loc[index].values.reshape(1, -1))
@@ -311,8 +315,9 @@ def fill_categorical_missing_vals(train, val, test, features):
     train = all_sets[0]
     val = all_sets[1]
     test = all_sets[2]
+    unlabeled = all_sets[3]
 
-    assert num_nas(train, val, test, ['Most_Important_Issue']) == 0
-    return train, val, test
+    assert num_nas(train, val, test, unlabeled, ['Most_Important_Issue']) == 0
+    return train, val, test, unlabeled
 
 
