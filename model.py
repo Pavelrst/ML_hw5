@@ -51,20 +51,31 @@ class MLP_ensemble():
     def predict_winner(self, x_test):
         predictions = self.predict(x_test)
         winner = max(set(predictions), key=predictions.tolist().count)
-        #winner_name = self.party_dict[winner]
-        print("Winner prediction - ", winner, " party will win the elections.")
-        return winner
+        winner_name = self.party_dict[winner]
+        print("Winner prediction - ", winner_name, " party will win the elections.")
+        return winner_name
 
     def predict_vote_division(self, x_test):
         predictions = self.predict(x_test)
         pred_hist = [0] * self.num_of_classes
         for pred in predictions:
-            pred_hist[pred] += 1
+            pred_hist[int(pred)] += 1
         total = sum(pred_hist)
         print(" prediction - Vote division:")
         for idx, num in enumerate(pred_hist):
-            print("Party ", self.party_dict[idx], ":", np.round((num / total) * 100, 1), "%")
+            print("Party ", self.party_dict[idx], ":", np.round((num / total) * 100, 3), "%")
 
+    def write_pred_to_csv(self, x_test, id_test):
+        pred = self.predict(x_test)
+        pred_names = []
+        for p in pred:
+            pred_names.append(self.party_dict[p])
+
+        sorted_pred_names = [x for _, x in sorted(zip(id_test, pred_names))]
+        sorted_ids = sorted(id_test)
+
+        data = pd.DataFrame({'IdentityCard_Num': sorted_ids, 'Vote': sorted_pred_names})
+        data.to_csv('test_predictions.csv', sep=',', index=False)
 
 
 
