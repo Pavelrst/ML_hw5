@@ -19,7 +19,21 @@ class dataProvider():
         self.val_set = pd.read_csv(input_path+delimiter+'validation_transformed.csv')
         self.test_set = pd.read_csv(input_path+delimiter+'test_transformed.csv')
 
-        self.original_train = pd.read_csv(input_path + delimiter + 'train_backup.csv')
+        # prepare dict:
+        party_names = self.train_set['Party'].values
+        party_nums = self.train_set['Vote'].values
+
+        num_list = []
+        name_list = []
+        for num, name in zip(party_nums, party_names):
+            if num not in num_list:
+                num_list.append(num)
+                name_list.append(name)
+            else:
+                idx = num_list.index(num)
+                assert name_list[idx] == name
+
+        self.vote_dictionary = dict(zip(num_list, name_list))
 
         # preparing dataset to model:
         self.y_train = self.train_set.pop('Vote').values
@@ -33,11 +47,6 @@ class dataProvider():
         self.test_set_indices = self.test_set.index.values
         self.feature_names = self.train_set.columns
 
-
-        self.vote_categories = None
-        self.vote_numbers = None
-        self.vote_dictionary = None
-
     def test_for_nans(self):
         assert sum([s.isna().sum().sum() for s in (self.train_set, self.val_set, self.test_set)]) == 0
 
@@ -45,21 +54,6 @@ class dataProvider():
         '''
         :return: dictionary which maps 'Vote' category to numbers.
         '''
-        party_names = self.original_train['Vote'].values
-        party_nums = self.y_train
-
-        num_list = []
-        name_list = []
-        for num, name in zip(party_nums, party_names):
-            if num not in num_list:
-                num_list.append(num)
-                name_list.append(name)
-            else:
-                idx = num_list.index(num)
-                assert name_list[idx] == name
-
-
-        self.vote_dictionary = dict(zip(num_list, name_list))
         return self.vote_dictionary
 
     def get_sets_as_pd(self):
@@ -67,24 +61,21 @@ class dataProvider():
 
     def get_train_xy(self, onehot_y=False):
         if not onehot_y:
-            return self.train_set['Unnamed: 0'].values, self.x_train[:,1:], self.y_train
+            return self.x_train, self.y_train
         else:
             dummy_y = np_utils.to_categorical(self.y_train)
-            return self.train_set['Unnamed: 0'].values, self.x_train[:, 1:], dummy_y
+            return self.x_train, dummy_y
 
     def get_val_xy(self, onehot_y=False):
         if not onehot_y:
-            return self.val_set['Unnamed: 0'].values, self.x_val[:,1:], self.y_val
+            return self.x_val, self.y_val
         else:
             dummy_y = np_utils.to_categorical(self.y_val)
-            return self.val_set['Unnamed: 0'].values, self.x_val[:, 1:], dummy_y
+            return self.x_val, dummy_y
 
-    def get_test_xy(self, onehot_y=False):
-        if not onehot_y:
-            return self.test_set['Unnamed: 0'].values, self.x_test[:,1:], self.y_test
-        else:
-            dummy_y = np_utils.to_categorical(self.y_test)
-            return self.test_set['Unnamed: 0'].values, self.x_test[:, 1:], dummy_y
+    def get_test_xy(self):
+        return self.x_test
+
 
     def get_feature_names(self):
         return self.test_set.columns[1:]
