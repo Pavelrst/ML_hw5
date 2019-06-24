@@ -18,7 +18,7 @@ class dataProvider():
         self.train_set = pd.concat([pd.read_csv(input_path+delimiter+'train_transformed.csv'),
                                     pd.read_csv(input_path + delimiter + 'test_transformed.csv')])
         self.val_set = pd.read_csv(input_path+delimiter+'validation_transformed.csv')
-        self.test_set = pd.read_csv(input_path + delimiter + 'unlabeled_set.csv')
+        self.test_id, self.test_set = self.transform_test_set(input_path + delimiter + 'unlabeled_set.csv')
 
         # prepare dict:
         party_names = self.train_set['Party'].values
@@ -44,12 +44,23 @@ class dataProvider():
         self.y_train = self.train_set.pop('Vote').values
         self.y_val = self.val_set.pop('Vote').values
 
+        # sort columns lexicorgaphically
+        self.train_set.reindex(sorted(self.train_set.columns), axis=1)
+        self.val_set.reindex(sorted(self.val_set.columns), axis=1)
+
         self.x_train = self.train_set.values
         self.x_val = self.val_set.values
         self.x_test = self.test_set.values
 
         #self.test_set_indices = self.test_set.index.values
         self.feature_names = self.train_set.columns
+
+    def transform_test_set(self, path):
+        test_set = pd.read_csv(path)
+        #print(test_set)
+        test_id = test_set.pop('IdentityCard_Num')
+        test_set = test_set.reindex(sorted(test_set.columns), axis=1)
+        return  test_id, test_set
 
     def test_for_nans(self):
         assert sum([s.isna().sum().sum() for s in (self.train_set, self.val_set, self.test_set)]) == 0
