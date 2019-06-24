@@ -15,9 +15,10 @@ class dataProvider():
             delimiter = ''
         else:
             delimiter = '\\'
-        self.train_set = pd.read_csv(input_path+delimiter+'train_transformed.csv')
+        self.train_set = pd.concat([pd.read_csv(input_path+delimiter+'train_transformed.csv'),
+                                    pd.read_csv(input_path + delimiter + 'test_transformed.csv')])
         self.val_set = pd.read_csv(input_path+delimiter+'validation_transformed.csv')
-        self.test_set = pd.read_csv(input_path+delimiter+'test_transformed.csv')
+        self.test_set = pd.read_csv(input_path + delimiter + 'unlabeled_set.csv')
 
         # prepare dict:
         party_names = self.train_set['Party'].values
@@ -35,16 +36,19 @@ class dataProvider():
 
         self.vote_dictionary = dict(zip(num_list, name_list))
 
+        # get rid of parties names:
+        self.train_set.pop('Party')
+        self.val_set.pop('Party')
+
         # preparing dataset to model:
         self.y_train = self.train_set.pop('Vote').values
         self.y_val = self.val_set.pop('Vote').values
-        self.y_test = self.test_set.pop('Vote').values
 
         self.x_train = self.train_set.values
         self.x_val = self.val_set.values
         self.x_test = self.test_set.values
 
-        self.test_set_indices = self.test_set.index.values
+        #self.test_set_indices = self.test_set.index.values
         self.feature_names = self.train_set.columns
 
     def test_for_nans(self):

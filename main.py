@@ -8,7 +8,7 @@ from model import MLP_ensemble
 
 def main():
     dp = dataProvider()
-    #dp.test_for_nans()
+    dp.test_for_nans()
     party_dict = dp.get_vote_dict()
     x_train, y_train = dp.get_train_xy(onehot_y=True)
     x_val, y_val = dp.get_val_xy(onehot_y=True)
@@ -25,8 +25,8 @@ def main():
     #cv.tune_hidden_layers()
     #cv.rand_tune(iter=1000)
 
-    # ensamble = MLP_ensemble('saved_models')
-    # ensamble.score(x_test, y_test)
+    ensamble = MLP_ensemble('saved_models', party_dict)
+    ensamble.score(x_val, y_val)
 
 
 if __name__ == "__main__":
