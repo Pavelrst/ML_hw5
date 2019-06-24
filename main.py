@@ -26,7 +26,7 @@ def main():
     #cv.rand_tune(iter=1000)
 
     ensamble = MLP_ensemble('saved_models', party_dict)
-    #ensamble.score(x_val, y_val)
+    ensamble.score(x_val, y_val)
     #ensamble.predict_vote_division(x_test)
 
 

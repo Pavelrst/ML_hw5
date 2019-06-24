@@ -45,8 +45,16 @@ class dataProvider():
         self.y_val = self.val_set.pop('Vote').values
 
         # sort columns lexicorgaphically
-        self.train_set.reindex(sorted(self.train_set.columns), axis=1)
-        self.val_set.reindex(sorted(self.val_set.columns), axis=1)
+        self.train_set = self.train_set.reindex(sorted(self.train_set.columns), axis=1)
+        self.val_set = self.val_set.reindex(sorted(self.val_set.columns), axis=1)
+
+        # Ensure that everything is sorted:
+        for a, b, c in zip(self.train_set.columns,
+                           self.val_set.columns,
+                           self.test_set.columns):
+            assert a == b
+            assert b == c
+            assert c == a
 
         self.x_train = self.train_set.values
         self.x_val = self.val_set.values
@@ -54,6 +62,9 @@ class dataProvider():
 
         #self.test_set_indices = self.test_set.index.values
         self.feature_names = self.train_set.columns
+
+    def get_test_id(self):
+        return self.test_id
 
     def transform_test_set(self, path):
         test_set = pd.read_csv(path)
