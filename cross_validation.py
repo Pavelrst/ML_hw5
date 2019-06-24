@@ -94,9 +94,10 @@ class crossValidator():
                 f.write("%s\n" % res)
 
             if avg_acc > ACC_THRESHOLD and avg_f1 > F1_THRESHOLD:
+                print("saving...")
                 mlp1.fit(self.set_x, self.set_y)
                 rand_id = random.randint(1,1000000)
-                path = MODELS_PATH + '\\' + "model_" + str(rand_id) + ".h5"
+                path = MODELS_PATH + '\\' + "model_" + str(np.round(avg_acc, 4)) + '_' + str(rand_id) + ".h5"
                 mlp1.save(path)
 
 
