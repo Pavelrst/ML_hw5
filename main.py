@@ -17,14 +17,16 @@ def main():
     id_test = dp.get_test_id()
 
     # Cross validation Random search
-    # cv = crossValidator(train_x=x_train, train_y=y_train, num_of_folds=4, max_epochs=500)
-    # cv.rand_tune(iter=1000)
+    print("Cross validation Random search with train set of size: ", len(y_train), " val set size:", len(y_val))
+    #cv = crossValidator(train_x=x_train, train_y=y_train, num_of_folds=4, max_epochs=500)
+    #cv.rand_tune(iter=10000)
+    #cv.custom_tune(iter=10)
 
-    # ensamble = MLP_ensemble('saved_models', party_dict)
-    #ensamble.score(x_val, y_val)
-    #ensamble.predict_winner(x_test)
-    #ensamble.predict_vote_division(x_test)
-    #ensamble.write_pred_to_csv(x_test, id_test)
+    ensamble = MLP_ensemble('saved_models', party_dict)
+    ensamble.score(x_val, y_val)
+    ensamble.predict_winner(x_test)
+    ensamble.predict_vote_division(x_test)
+    ensamble.write_pred_to_csv(x_test, id_test)
 
     # Sanity check
     similarity_to_ido()

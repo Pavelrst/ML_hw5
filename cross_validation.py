@@ -8,8 +8,8 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 
 PLOTS_PATH = 'Cross_valid_plots'
-ACC_THRESHOLD = 0.93
-F1_THRESHOLD = 0.93
+ACC_THRESHOLD = 0.94
+F1_THRESHOLD = 0.94
 MODELS_PATH = 'saved_models'
 
 class crossValidator():
@@ -100,7 +100,58 @@ class crossValidator():
                 path = MODELS_PATH + '\\' + "model_" + str(np.round(avg_acc, 4)) + '_' + str(rand_id) + ".h5"
                 mlp1.save(path)
 
+    def custom_tune(self, iter=3, graphic=True):
+        res_list = []
 
+        for i in range(iter):
+            avg_acc = 0
+            avg_f1 = 0
+
+            # Random params
+            p = 0.06
+            a = 0.08
+            h_list = [170, 174]
+            act = 'tanh'
+            scheduling = False
+            b_norm = False
+
+            mlp1 = Keras_MLP(n_hidden_list=h_list,
+                             num_features=9,
+                             lrelu_alpha=a,
+                             drop_p=p,
+                             max_epochs=self.max_epochs,
+                             activation=act,
+                             b_norm=b_norm)
+
+            for train_index, test_index in self.kf.split(self.set_x):
+                x_train, x_test = self.set_x[train_index], self.set_x[test_index]
+                y_train, y_test = self.set_y[train_index], self.set_y[test_index]
+                mlp1.fit(x_train, y_train)
+
+                y_pred = mlp1.predict(x_test)
+                f1 = f1_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1), average='weighted')
+                acc = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
+
+                avg_acc += acc
+                avg_f1 += f1
+
+            avg_acc = avg_acc / self.k
+            avg_f1 = avg_f1 / self.k
+
+            res = {'avg_acc': avg_acc, 'avg_f1': avg_f1,
+                             'layers': h_list, 'drop_p': p, 'relu_slope': a,
+                   'activation': act, 'scheduling': scheduling, 'b_norm': b_norm}
+            print(res)
+            res_list.append(res)
+            with open('random_models.txt', 'a') as f:
+                f.write("%s\n" % res)
+
+            if avg_acc > ACC_THRESHOLD and avg_f1 > F1_THRESHOLD:
+                print("saving...")
+                mlp1.fit(self.set_x, self.set_y)
+                rand_id = random.randint(1,1000000)
+                path = MODELS_PATH + '\\' + "model_" + str(np.round(avg_acc, 4)) + '_' + str(rand_id) + ".h5"
+                mlp1.save(path)
 
 
 

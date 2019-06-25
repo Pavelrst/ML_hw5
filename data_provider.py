@@ -15,9 +15,11 @@ class dataProvider():
             delimiter = ''
         else:
             delimiter = '\\'
-        self.train_set = pd.concat([pd.read_csv(input_path+delimiter+'train_transformed.csv'),
-                                    pd.read_csv(input_path + delimiter + 'test_transformed.csv')])
-        self.val_set = pd.read_csv(input_path+delimiter+'validation_transformed.csv')
+
+        self.train_set = pd.read_csv(input_path+delimiter+'train_transformed.csv')
+        self.val_set = pd.concat([pd.read_csv(input_path + delimiter + 'validation_transformed.csv'),
+                                  pd.read_csv(input_path + delimiter + 'test_transformed.csv')])
+
         self.test_id, self.test_set = self.transform_test_set(input_path + delimiter + 'unlabeled_set.csv')
 
         # prepare dict:

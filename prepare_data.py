@@ -73,7 +73,7 @@ def main():
     print("main finished")
 
 
-def load_and_split(input_path, backup_dir, train=0.6, validation=0.2, test=0.2):
+def load_and_split(input_path, backup_dir, train=0.7, validation=0.15, test=0.15):
     '''
     This function load .csv file, the original is not modified.
     Split the data to – train (50-75%), validation, (25-15%), test (25-10%)
