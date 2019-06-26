@@ -74,8 +74,8 @@ class MLP_ensemble():
         sorted_pred_names = [x for _, x in sorted(zip(id_test, pred_names))]
         sorted_ids = sorted(id_test)
 
-        data = pd.DataFrame({'IdentityCard_Num': sorted_ids, 'Vote': sorted_pred_names})
-        data.to_csv('test_predictions.csv', sep=',', index=False)
+        data = pd.DataFrame({'IdentityCard_Num': sorted_ids, 'PredictVote': sorted_pred_names})
+        data.to_csv('vote_predictions.csv', sep=',', index=False)
 
 
 

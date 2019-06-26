@@ -20,7 +20,6 @@ def main():
     print("Cross validation Random search with train set of size: ", len(y_train), " val set size:", len(y_val))
     #cv = crossValidator(train_x=x_train, train_y=y_train, num_of_folds=4, max_epochs=500)
     #cv.rand_tune(iter=10000)
-    #cv.custom_tune(iter=10)
 
     ensamble = MLP_ensemble('saved_models', party_dict)
     ensamble.score(x_val, y_val)
@@ -29,20 +28,44 @@ def main():
     ensamble.write_pred_to_csv(x_test, id_test)
 
     # Sanity check
-    similarity_to_ido()
+    # plot_random_models()
+    similarity_to()
 
-def similarity_to_ido():
-    ido = pd.read_csv('ido_predictions.csv')
-    pavel = pd.read_csv('test_predictions.csv')
-    ido_party = ido.pop('Vote').values
-    pavel_party = pavel.pop('Vote').values
+def plot_random_models():
+    with open('random_models.txt') as f:
+        lines = f.readlines()
+        acc_list = []
+        f1_list = []
+        for line in lines:
+            try:
+                acc_list.append(float(line.split(':')[1].split(',')[0]))
+                f1_list.append(float(line.split(':')[2].split(',')[0]))
+            except:
+                print("bad line")
+
+        iter_list = range(len(acc_list))
+        target = [0.945]*len(acc_list)
+        plt.scatter(iter_list, acc_list, label='Accuracy', s=1)
+        plt.scatter(iter_list, f1_list, label='F1 score', s=1)
+        plt.plot(iter_list, target, label='target 0.945', c='r')
+        plt.legend()
+        plt.ylabel('Accuracy, F1 score')
+        plt.xlabel('Iteration of random search')
+        plt.ylim(0.5,1)
+        plt.show()
+
+def similarity_to():
+    ido = pd.read_csv('chen_predictions.csv')
+    pavel = pd.read_csv('vote_predictions.csv')
+    ido_party = ido.pop('PredictVote').values
+    pavel_party = pavel.pop('PredictVote').values
 
     acc = 0
     for i,p in zip(ido_party, pavel_party):
         if i == p:
             acc += 1
     acc = acc/100
-    print("Similarity to ido: ", acc, "%")
+    print("Similarity to chen: ", acc, "%")
 
 if __name__ == "__main__":
     main()

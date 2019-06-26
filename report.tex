@@ -79,13 +79,16 @@
 \maketitle
 
 
-%\newpage
+\newpage
 \section{Process and significant decisions}
+\subsection{Dividing the data to Train set and Test set}
+We decided to divide the data to two sets with ratio 0.85:0.15. The train set of 8500 samples will be used during k-fold cross validation and ensemble generation. Then, the final model will be evaluated on 1500 test samples to get the final accuracy of our model and from this point we will not be able to do any changes on our model, as it will be considered as "information leakage" as we changes something in the model based on the test set results. Also, the model will not be trained then on the whole 10000 samples, as based on the articles we found, this is a bad practise. After those steps we will predict the labels of the unlabelled data. The statistics which where used to transform the data in the test set and the unlabelled set were calculated according to train set (8500 samples) only.  
+
 \subsection{Using one model and ensemble technique}
 In Homework 3, during the automatic model selection, we found that the best model for the prediction tasks is a Multi-layer perceptron. In this homework we decided to use MLP model as well, according our findings. The main problem with sklearn MLP model was a high level of abstraction which prevented from us to use more advanced techniques. Thus, in this homework we will use Keras framework to build a deep learning model. To boost our model accuracy we decided to use ensemble technique. We will train multiple MLP models, then use all of them to predict the labels. 
 
 \subsection{Hyper parameters tuning with random search}
-Based on Stanford CS231n course, lectures 6,7, we decided to use another technique for tuning the MLP parameters using random search, as this "brute force" technique might achieve better results than tuning parameters one by one. In all our cross-validation experiments we used the $accuracy$ and $f1_score$ as model performance measurement. Models which achieve more than 0.93 on both metrics will be saved and used as a part of ensemble.
+Based on Stanford CS231n course, lectures 6,7, we decided to use another technique for tuning the MLP parameters using random search, as this "brute force" technique might achieve better results than tuning parameters one by one. In all our cross-validation experiments we used the $accuracy$ and $f1$ score as model performance measurement. Models which achieve more than 0.945 on average with both metrics will be trained on whole training set and then saved and used as a part of ensemble.
 
 \begin{figure}[h]
 \centering
@@ -103,11 +106,48 @@ For current data-set, deep neural networks tend to over-fit, thus we will draw a
 \subsection{Batch Normalization}
 For each model we will decide randomly either to use or not batch normalization between the layers. 
 
+\newpage
+\section{Cross validation Results}
+During the cross validation we've trained more than 1200 models with different performance and maintained a log which contains the hyper parameters. As we can see in the plot, some models reached higher scores than the target value. Those models were retrained on whole train set and saved as model file. In total producing 11 models with cross validation average accuracy of 0.948 to 0.953.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{pics/randsrc}
+\caption{Random search performance}
+\end{figure} 
+
+It's worth to mention that we loved a lot this technique as the process fully automated and does not require any manual involvement. We've just prepared the data and gave the code to run over few days. It's a brute-force, lazy-technique which achieved incredibly high final score, much higher than the MLP model with manually tuned hyper-parameters in HW3. 
+
+\newpage
 \section{Validation results and Final predictions}
 \subsection{Validation set accuracy}
-\subsection{Predicted Winner}
-\subsection{Predicted Votes division}
+When the ensemble of 11 models was ready, we tested it's performance on 1500 samples set which was never seen by any of the models. The accuracy of the ensemble on the test set is: 0.954.
 
+\subsection{Predicted Winner}
+\begin{verbatim}
+Winner prediction -  Browns  party will win the elections.
+\end{verbatim}
+
+\subsection{Predicted Votes division}
+\begin{verbatim}
+Prediction - Vote division:
+Party  Browns : 20.94 %
+Party  Purples : 20.83 %
+Party  Blues : 9.97 %
+Party  Pinks : 8.66 %
+Party  Greens : 8.36 %
+Party  Oranges : 7.51 %
+Party  Greys : 5.57 %
+Party  Yellows : 4.84 %
+Party  Whites : 4.51 %
+Party  Reds : 4.43 %
+Party  Turquoises : 3.38 %
+Party  Khakis : 0.78 %
+Party  Violets : 0.22 %
+\end{verbatim}
+
+\subsection{Conclusion}
+As we can see, the Browns party will win the elections with difference of $0.11\%$ which is 11 votes in total. What a close race! 
 
 
 \end{document}
